@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 import os
 here = os.getcwd()
 
-with open(os.path.join(here, 'guipyter', '__version__')) as f:
+with open(os.path.join(here, 'panomics', '__version__')) as f:
     __version__ = f.read().strip()
 
 setup(
