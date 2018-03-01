@@ -36,6 +36,35 @@ import pandas
 import numpy as np
 
 
+def first_member(self, delim=';'):
+    """Return the first member of split on delim.
+
+    Intended for pandas.Series that has lists in the form of strings
+    with a foreign delimiter.
+
+    WARNING: NaNs are cast as strings and cast back to floats. So if
+    your first member happens to be 'nan' it will be cast as a float.
+
+    Parameters
+    ----------
+    delim : str
+        The delimeter to to perform the split on.
+
+    Returns
+    -------
+    results : pandas.Series
+        A Series of the first members of the list.
+    """
+    result = self.astype(str).apply(lambda x: x.split(delim)[0])
+
+    result = result.replace('nan', float('nan'))
+
+    return result
+
+
+setattr(pandas.Series, 'first_member', first_member)
+
+
 def log2(self):
     """Take the Log2 of all values in a DataFrame."""
     return self.apply(np.log2)
@@ -146,30 +175,27 @@ def filter_out(self, *args, **kwargs):
 setattr(pandas.DataFrame, 'filter_out', filter_out)
 
 
-def first_member(self, delim=';'):
-    """Return the first member of split on delim.
-
-    Intended for pandas.Series that has lists in the form of strings
-    with a foreign delimiter.
-
-    WARNING: NaNs are cast as strings and cast back to floats. So if
-    your first member happens to be 'nan' it will be cast as a float.
-
-    Parameters
-    ----------
-    delim : str
-        The delimeter to to perform the split on.
-
-    Returns
-    -------
-    results : pandas.Series
-        A Series of the first members of the list.
+def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_cols=None, *args, **kwargs):
+    """Returns DataFrame that has been subtracted by another DataFrame using the as_matrix method.
     """
-    result = self.astype(str).apply(lambda x: x.split(delim)[0])
+    result = pandas.DataFrame()
 
-    result = result.replace('nan', float('nan'))
+    try:
+        result = self.as_matrix() - other_dataframe.as_matrix()
+        result = pandas.DataFrame(result)
+        result.index = self.index
+        result.columns = self.columns
+
+        if prepend_cols:
+            result.columns = prepend_cols + result.columns
+
+        if append_cols:
+            result.columns = append_cols + result.columns
+
+    except Exception as err:
+        print("Could not subtract by matrix.", err)
 
     return result
 
 
-setattr(pandas.Series, 'first_member', first_member)
+setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
