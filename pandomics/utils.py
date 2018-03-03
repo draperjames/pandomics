@@ -73,8 +73,17 @@ def log2(self):
 setattr(pandas.DataFrame, "log2", log2)
 
 
-def log2_normalize(self):
+def log2_normalize(self, prepend_cols=None, append_cols=None, *args, **kwargs):
     """Return a Log2 normalized DataFrame Log2(values)-mean(Log2(values))."""
+
+    result = self.log2().sub(self.log2().mean(axis=1), axis=0)
+
+    if prepend_cols:
+        result.columns = prepend_cols + result.columns
+
+    if append_cols:
+        result.columns = append_cols + result.columns
+
     return self.log2().sub(self.log2().mean(axis=1), axis=0)
 
 
