@@ -1,11 +1,11 @@
 REM Updating git repo
 
-@echo off
-set /p message="Enter git commit message: "
+:: @echo off
+:: set /p message="Enter git commit message: "
 
-git add -A
-git commit -m %message%
-git push
+:: git add -A
+:: git commit -m %message%
+:: git push
 
 REM Cleaning up before building.
 git clean -fdx
