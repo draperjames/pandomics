@@ -184,8 +184,27 @@ def filter_out(self, *args, **kwargs):
 setattr(pandas.DataFrame, 'filter_out', filter_out)
 
 
+def filter_rows(self, on=None, term=None):
+    """Return DataFrame that contains a given term(str) on specific column.
+    """
+    filtered = self
+    try:
+        filtered = self[self[on].str.contains(term)]
+
+    except Exception as err:
+        print("filter_rows failed:", err)
+
+    return filtered
+
+
+setattr(pandas.DataFrame, 'filter_rows', filter_rows)
+
+
 def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_cols=None, *args, **kwargs):
     """Returns DataFrame that has been subtracted by another DataFrame using the as_matrix method.
+
+    This method can be invoked instead of the pandas.DataFrame.subtract method.
+    Which does not subtract matrices in the usual way.
     """
     result = pandas.DataFrame()
 
