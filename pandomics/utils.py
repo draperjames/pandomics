@@ -29,11 +29,24 @@ for the lab rats.
 # TORT OR OTHERWISE, ARISING FROM. OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
 # THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
+import functools
 import pandas
-# from pandas import Series
-# from pandas import DataFrame
 import numpy as np
+
+try:
+    from scipy.stats import ttest_ind
+except ImportError as err:
+    print(err)
+
+try:
+    from statsmodels.sandbox.stats.multicomp import multipletests
+except ImportError as err:
+    print(err)
+
+# try:
+#     from pandomics import pandas as pd
+# except ImportError as err:
+#     print(err)
 
 
 def first_member(self, delim=';'):
@@ -125,6 +138,129 @@ def normalize_to(self, normal):
 
 
 setattr(pandas.DataFrame, "normalize_to", normalize_to)
+
+
+def fold_change(self, right=None, numerator=None, denominator=None, column_name="FC", axis=1):
+    """Return the fold change of two groups in this DataFrame or this DataFrame and another(right).
+
+    When making comparisons between this DataFrame and another, set the `right`
+    kwarg to the other DataFrame, do not use the numerator and denominator
+    kwargs.
+
+    Parameters
+    ----------
+    numerator: str
+
+    denominator: str
+
+    right: pandas.DataFrame
+
+    column_name: str
+
+    axis: int
+
+    Returns
+    -------
+    result: pandas.DataFrame
+    """
+
+    if right is not None:
+        left = self
+
+    else:
+        if numerator is not None:
+            left = self.filter(regex=numerator)
+
+        if denominator is not None:
+            right = self.filter(regex=denominator)
+
+    result = left.mean(axis=axis) - right.mean(axis=axis)
+    result = pandas.DataFrame(result, index=self.index, columns=[column_name])
+
+    return result
+
+
+setattr(pandas.DataFrame, "fold_change", fold_change)
+
+
+def ttest(self, numerator=None, denominator=None, right=None, column_name="pvalue", axis=1):
+    """Return the p-value of two groups in this DataFrame or this DataFrame and another(right).
+
+    The numerator and denominator must be defined to make a comparison inside of
+    a DataFrame.
+
+    When making comparisons between this DataFrame and another, set the `right`
+    kwarg to the other DataFrame, do not use the numerator and denominator
+    kwargs.
+
+    Parameters
+    ----------
+    numerator: str
+
+    denominator: str
+
+    right: pandas.DataFrame
+
+    column_name: str
+
+    axis: int
+
+    Returns
+    -------
+    result: pandas.DataFrame
+    """
+
+    if right is not None:
+        left = self
+
+    else:
+        if numerator is not None:
+            left = self.filter(regex=numerator)
+
+        if denominator is not None:
+            right = self.filter(regex=denominator)
+
+    # The loop below suppresses an irrelevent error message.
+    # For more details on this see:
+    # http://stackoverflow.com/questions/40452765/invalid-value-in-less-when-comparing-np-nan-in-an-array
+    with np.errstate(invalid='ignore'):
+        np.less([np.nan, 0], 1)
+        # ttest_ind implemented
+        result = ttest_ind(left, right, axis=axis).pvalue
+
+    result = pandas.DataFrame(result, columns=[column_name], index=self.index)
+
+    return result
+
+
+setattr(pandas.DataFrame, "ttest", ttest)
+
+
+def ttest_fdr(self, right=None, numerator=None, denominator=None, column_name="pvalue", alpha=None, method="fdr_bh", axis=1):
+    """Return the p-value and p-adjusted of this dataframe and another or two groups inside of this dataframe.
+    """
+
+    alpha = alpha or .05
+    result = self.ttest(right=right, numerator=numerator, denominator=denominator, column_name=column_name, axis=axis)
+
+    bh_funct = functools.partial(multipletests, method=method, alpha=alpha)
+
+    p_adj = bh_funct(pvals=result.dropna().values.T[0])
+
+    p_adj = pandas.DataFrame(p_adj[1])
+
+    p_adj.index = result.dropna().index
+
+    p_adj = p_adj.reindex(index=result.index)
+
+    p_adj.columns = ["p_adjusted"]
+
+    result = pandas.concat([result, p_adj], axis=axis)
+
+    return result
+
+
+setattr(pandas.DataFrame, "ttest_fdr", ttest_fdr)
 
 
 @property
