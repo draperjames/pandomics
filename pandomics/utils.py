@@ -236,16 +236,20 @@ def ttest(self, numerator=None, denominator=None, right=None, column_name="pvalu
 setattr(pandas.DataFrame, "ttest", ttest)
 
 
-def ttest_fdr(self, right=None, numerator=None, denominator=None, column_name="pvalue", alpha=None, method="fdr_bh", axis=1):
+def ttest_fdr(self, numerator=None, denominator=None, right=None,
+              column_name="pvalue", alpha=None, method="fdr_bh", axis=1):
     """Return the p-value and p-adjusted of this dataframe and another or two groups inside of this dataframe.
     """
-
     alpha = alpha or .05
-    result = self.ttest(right=right, numerator=numerator, denominator=denominator, column_name=column_name, axis=axis)
+    result = self.ttest(right=right,
+                        numerator=numerator,
+                        denominator=denominator,
+                        column_name=column_name,
+                        axis=axis)
 
-    bh_funct = functools.partial(multipletests, method=method, alpha=alpha)
+    fdr_funct = functools.partial(multipletests, method=method, alpha=alpha)
 
-    p_adj = bh_funct(pvals=result.dropna().values.T[0])
+    p_adj = fdr_funct(pvals=result.dropna().values.T[0])
 
     p_adj = pandas.DataFrame(p_adj[1])
 
@@ -261,6 +265,30 @@ def ttest_fdr(self, right=None, numerator=None, denominator=None, column_name="p
 
 
 setattr(pandas.DataFrame, "ttest_fdr", ttest_fdr)
+
+
+def fold_change_with_ttest(self, numerator=None, denominator=None, right=None,
+                           fdr_alpha=None, fdr_method="fdr_bh", axis=1):
+    """Return the fold change, p-values, and p-adjusted for a comparison.
+    """
+
+    fold_change = self.fold_change(numerator=numerator,
+                                   denominator=denominator,
+                                   right=right,
+                                   axis=axis)
+
+    pvalue = self.ttest_fdr(numerator=numerator,
+                            denominator=denominator,
+                            right=right,
+                            alpha=fdr_alpha,
+                            method=fdr_method,
+                            axis=axis)
+
+    result = pandas.concat([fold_change, pvalue], axis=axis)
+    return result
+
+
+setattr(pandas.DataFrame, "fold_change_with_ttest", fold_change_with_ttest)
 
 
 @property
