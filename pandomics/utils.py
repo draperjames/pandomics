@@ -140,7 +140,9 @@ def normalize_to(self, normal):
 setattr(pandas.DataFrame, "normalize_to", normalize_to)
 
 
-def fold_change(self, right=None, numerator=None, denominator=None, column_name="FC", axis=1):
+def fold_change(self, right=None, numerator=None, denominator=None, filter_out_numerator=False,
+                filter_out_denominator=False, column_name="FC", axis=1):
+
     """Return the fold change of two groups in this DataFrame or this DataFrame and another(right).
 
     When making comparisons between this DataFrame and another, set the `right`
@@ -169,10 +171,16 @@ def fold_change(self, right=None, numerator=None, denominator=None, column_name=
 
     else:
         if numerator is not None:
-            left = self.filter(regex=numerator)
+            if filter_out_numerator:
+                left = self.filter_out(regex=numerator)
+            else:
+                left = self.filter(regex=numerator)
 
         if denominator is not None:
-            right = self.filter(regex=denominator)
+            if filter_out_denominator:
+                right = self.filter_out(regex=denominator)
+            else:
+                right = self.filter(regex=denominator)
 
     result = left.mean(axis=axis) - right.mean(axis=axis)
     result = pandas.DataFrame(result, index=self.index, columns=[column_name])
@@ -183,7 +191,9 @@ def fold_change(self, right=None, numerator=None, denominator=None, column_name=
 setattr(pandas.DataFrame, "fold_change", fold_change)
 
 
-def ttest(self, numerator=None, denominator=None, right=None, column_name="pvalue", axis=1):
+def ttest(self, right=None, numerator=None, denominator=None, filter_out_numerator=False,
+          filter_out_denominator=False, column_name="pvalue", axis=1):
+
     """Return the p-value of two groups in this DataFrame or this DataFrame and another(right).
 
     The numerator and denominator must be defined to make a comparison inside of
@@ -215,10 +225,16 @@ def ttest(self, numerator=None, denominator=None, right=None, column_name="pvalu
 
     else:
         if numerator is not None:
-            left = self.filter(regex=numerator)
+            if filter_out_numerator:
+                left = self.filter_out(regex=numerator)
+            else:
+                left = self.filter(regex=numerator)
 
         if denominator is not None:
-            right = self.filter(regex=denominator)
+            if filter_out_denominator:
+                right = self.filter_out(regex=denominator)
+            else:
+                right = self.filter(regex=denominator)
 
     # The loop below suppresses an irrelevent error message.
     # For more details on this see:
@@ -236,14 +252,17 @@ def ttest(self, numerator=None, denominator=None, right=None, column_name="pvalu
 setattr(pandas.DataFrame, "ttest", ttest)
 
 
-def ttest_fdr(self, numerator=None, denominator=None, right=None,
-              column_name="pvalue", alpha=None, method="fdr_bh", axis=1):
+def ttest_fdr(self, numerator=None, denominator=None, filter_out_numerator=False,
+              filter_out_denominator=False, right=None, column_name="pvalue",
+              alpha=None, method="fdr_bh", axis=1):
     """Return the p-value and p-adjusted of this dataframe and another or two groups inside of this dataframe.
     """
     alpha = alpha or .05
     result = self.ttest(right=right,
                         numerator=numerator,
                         denominator=denominator,
+                        filter_out_numerator=filter_out_numerator,
+                        filter_out_denominator=filter_out_denominator,
                         column_name=column_name,
                         axis=axis)
 
@@ -268,17 +287,22 @@ setattr(pandas.DataFrame, "ttest_fdr", ttest_fdr)
 
 
 def fold_change_with_ttest(self, numerator=None, denominator=None, right=None,
+                           filter_out_numerator=False, filter_out_denominator=False,
                            fdr_alpha=None, fdr_method="fdr_bh", axis=1):
     """Return the fold change, p-values, and p-adjusted for a comparison.
     """
 
     fold_change = self.fold_change(numerator=numerator,
                                    denominator=denominator,
+                                   filter_out_numerator=filter_out_numerator,
+                                   filter_out_denominator=filter_out_denominator,
                                    right=right,
                                    axis=axis)
 
     pvalue = self.ttest_fdr(numerator=numerator,
                             denominator=denominator,
+                            filter_out_numerator=filter_out_numerator,
+                            filter_out_denominator=filter_out_denominator,
                             right=right,
                             alpha=fdr_alpha,
                             method=fdr_method,
