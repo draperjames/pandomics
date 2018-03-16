@@ -415,3 +415,54 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
 
 
 setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
+
+
+def _gca(rc=None):
+    import matplotlib.pyplot as plt
+    with plt.rc_context(rc):
+        return plt.gca()
+
+
+def volcano(self, **kwargs):
+
+    if "ax" in kwargs:
+
+        # Create the subplot for the return.
+        ax = self.plot.scatter(x="FC", y="negative_log10_pvalue", **kwargs)
+
+        kwargs["ax"].set_ylim([0, 4.])
+
+        kwargs["ax"].set_xlim([-2.5, 2.5])
+
+        kwargs["ax"].set_aspect(1)
+
+        kwargs["ax"].set_ylabel("-Log10(p Value)")
+
+        kwargs["ax"].set_xlabel("Log2 FC")
+
+        kwargs["ax"].grid(True, linestyle='dashed')
+
+        kwargs["ax"].set_axisbelow(True)
+
+    else:
+        ax = _gca()
+
+        ax.set_ylim([0, 4.])
+
+        ax.set_xlim([-2.5, 2.5])
+        # Create the subplot for the return.
+        ax = self.plot.scatter(x="FC",y="negative_log10_pvalue", ax=ax, **kwargs)
+
+        ax.set_aspect(1)
+
+        ax.set_ylabel("-Log10(p Value)")
+
+        ax.set_xlabel("Log2 FC")
+
+        ax.grid(True, linestyle='dashed')
+
+        ax.set_axisbelow(True)
+
+        return ax
+
+setattr(pandas.DataFrame, 'volcano', volcano)
