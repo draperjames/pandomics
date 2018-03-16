@@ -31,7 +31,9 @@ for the lab rats.
 
 import functools
 import pandas
+from pandas.core.dtypes.common import is_integer, is_hashable
 import numpy as np
+
 
 try:
     from scipy.stats import ttest_ind
@@ -417,52 +419,164 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
 setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
 
 
-def _gca(rc=None):
-    import matplotlib.pyplot as plt
-    with plt.rc_context(rc):
-        return plt.gca()
+# def _gca(rc=None):
+#     import matplotlib.pyplot as plt
+#     with plt.rc_context(rc):
+#         return plt.gca()
 
 
-def volcano(self, **kwargs):
+# def volcano(self, **kwargs):
+#
+#     if "ax" in kwargs:
+#
+#         # Create the subplot for the return.
+#         ax = self.plot.scatter(x="FC", y="negative_log10_pvalue", **kwargs)
+#
+#         kwargs["ax"].set_ylim([0, 4.])
+#
+#         kwargs["ax"].set_xlim([-2.5, 2.5])
+#
+#         kwargs["ax"].set_aspect(1)
+#
+#         kwargs["ax"].set_ylabel("-Log10(p Value)")
+#
+#         kwargs["ax"].set_xlabel("Log2 FC")
+#
+#         kwargs["ax"].grid(True, linestyle='dashed')
+#
+#         kwargs["ax"].set_axisbelow(True)
+#
+#     else:
+#         ax = _gca()
+#
+#         ax.set_ylim([0, 4.])
+#
+#         ax.set_xlim([-2.5, 2.5])
+#         # Create the subplot for the return.
+#         ax = self.plot.scatter(x="FC",y="negative_log10_pvalue", ax=ax, **kwargs)
+#
+#         ax.set_aspect(1)
+#
+#         ax.set_ylabel("-Log10(p Value)")
+#
+#         ax.set_xlabel("Log2 FC")
+#
+#         ax.grid(True, linestyle='dashed')
+#
+#         ax.set_axisbelow(True)
+#
+#         return ax
+#
+# setattr(pandas.DataFrame, 'volcano', volcano)
 
-    if "ax" in kwargs:
 
-        # Create the subplot for the return.
-        ax = self.plot.scatter(x="FC", y="negative_log10_pvalue", **kwargs)
+class VolcanoPlot(pandas.plotting._core.PlanePlot):
+    _kind = 'volcano'
 
-        kwargs["ax"].set_ylim([0, 4.])
+    def __init__(self, data, x=None, y=None, s=None, c=None, **kwargs):
 
-        kwargs["ax"].set_xlim([-2.5, 2.5])
+        if x is None:
+            if "FC" in data:
+                x="FC"
+            elif "LFC" in data:
+                x="LFC"
 
-        kwargs["ax"].set_aspect(1)
+        if y is None:
+            if "negative_log10_pvalue" in data:
+                y="negative_log10_pvalue"
 
-        kwargs["ax"].set_ylabel("-Log10(p Value)")
+            elif "pvalue" in data:
+                data["negative_log10_pvalue"] = -np.log10(data["pvalue"])
+                y="negative_log10_pvalue"
 
-        kwargs["ax"].set_xlabel("Log2 FC")
+        if s is None:
+            # hide the matplotlib default for size, in case we want to change
+            # the handling of this argument later
+            s = 20
 
-        kwargs["ax"].grid(True, linestyle='dashed')
+        super(VolcanoPlot, self).__init__(data, x, y, s=s, **kwargs)
 
-        kwargs["ax"].set_axisbelow(True)
+        if is_integer(c) and not self.data.columns.holds_integer():
+            c = self.data.columns[c]
 
-    else:
-        ax = _gca()
+        self.c = c
 
-        ax.set_ylim([0, 4.])
+    def _make_plot(self):
+        x, y, c, data = self.x, self.y, self.c, self.data
+        ax = self.axes[0]
 
-        ax.set_xlim([-2.5, 2.5])
-        # Create the subplot for the return.
-        ax = self.plot.scatter(x="FC",y="negative_log10_pvalue", ax=ax, **kwargs)
+        c_is_column = is_hashable(c) and c in self.data.columns
 
-        ax.set_aspect(1)
+        # plot a colorbar only if a colormap is provided or necessary
+        cb = self.kwds.pop('colorbar', self.colormap or c_is_column)
 
-        ax.set_ylabel("-Log10(p Value)")
+        # pandas uses colormap, matplotlib uses cmap.
+        cmap = self.colormap or 'Greys'
+        cmap = self.plt.cm.get_cmap(cmap)
+        color = self.kwds.pop("color", None)
 
-        ax.set_xlabel("Log2 FC")
+        if c is not None and color is not None:
+            raise TypeError('Specify exactly one of `c` and `color`')
 
-        ax.grid(True, linestyle='dashed')
+        elif c is None and color is None:
+            c_values = self.plt.rcParams['patch.facecolor']
 
-        ax.set_axisbelow(True)
+        elif color is not None:
+            c_values = color
 
-        return ax
+        elif c_is_column:
+            c_values = self.data[c].values
 
-setattr(pandas.DataFrame, 'volcano', volcano)
+        else:
+            c_values = c
+
+        if self.legend and hasattr(self, 'label'):
+            label = self.label
+
+        else:
+            label = None
+
+        # Scatter plot called
+        scatter = ax.scatter(data[x].values, data[y].values, c=c_values,
+                             label=label, cmap=cmap, **self.kwds)
+
+        if cb:
+            img = ax.collections[0]
+            kws = dict(ax=ax)
+            if self.mpl_ge_1_3_1():
+                kws['label'] = c if c_is_column else ''
+            self.fig.colorbar(img, **kws)
+
+        if label is not None:
+            self._add_legend_handle(scatter, label)
+
+        else:
+            self.legend = False
+
+        errors_x = self._get_errorbars(label=x, index=0, yerr=False)
+        errors_y = self._get_errorbars(label=y, index=0, xerr=False)
+
+        if len(errors_x) > 0 or len(errors_y) > 0:
+            err_kwds = dict(errors_x, **errors_y)
+            err_kwds['ecolor'] = scatter.get_facecolor()[0]
+            ax.errorbar(data[x].values, data[y].values,
+                        linestyle='none', **err_kwds)
+
+#Amending the pandas.plotting._core
+
+# Set VolcanoPlot as an attribute of pandas.plotting._core
+setattr(pandas.plotting._core, "VolcanoPlot", VolcanoPlot)
+
+# Create the volcano helper function
+def volcano(self, x=None, y=None, s=None, c=None, **kwds):
+    return self(kind='volcano', x=x, y=y, c=c, s=s, **kwds)
+
+# Set the helper function
+setattr(pandas.plotting._core.FramePlotMethods, "volcano", volcano)
+# Append the class to pandas.plotting._core._klasses
+pandas.plotting._core._klasses.append(pandas.plotting._core.VolcanoPlot)
+
+# Add the class to the pandas.plotting._core._plot_klass dict
+pandas.plotting._core._plot_klass[VolcanoPlot._kind] = pandas.plotting._core.VolcanoPlot
+pandas.plotting._core._dataframe_kinds.append("volcano")
+pandas.plotting._core._all_kinds.append("volcano")
