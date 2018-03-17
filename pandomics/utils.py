@@ -419,55 +419,9 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
 setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
 
 
-# def _gca(rc=None):
-#     import matplotlib.pyplot as plt
-#     with plt.rc_context(rc):
-#         return plt.gca()
-
-
-# def volcano(self, **kwargs):
-#
-#     if "ax" in kwargs:
-#
-#         # Create the subplot for the return.
-#         ax = self.plot.scatter(x="FC", y="negative_log10_pvalue", **kwargs)
-#
-#         kwargs["ax"].set_ylim([0, 4.])
-#
-#         kwargs["ax"].set_xlim([-2.5, 2.5])
-#
-#         kwargs["ax"].set_aspect(1)
-#
-#         kwargs["ax"].set_ylabel("-Log10(p Value)")
-#
-#         kwargs["ax"].set_xlabel("Log2 FC")
-#
-#         kwargs["ax"].grid(True, linestyle='dashed')
-#
-#         kwargs["ax"].set_axisbelow(True)
-#
-#     else:
-#         ax = _gca()
-#
-#         ax.set_ylim([0, 4.])
-#
-#         ax.set_xlim([-2.5, 2.5])
-#         # Create the subplot for the return.
-#         ax = self.plot.scatter(x="FC",y="negative_log10_pvalue", ax=ax, **kwargs)
-#
-#         ax.set_aspect(1)
-#
-#         ax.set_ylabel("-Log10(p Value)")
-#
-#         ax.set_xlabel("Log2 FC")
-#
-#         ax.grid(True, linestyle='dashed')
-#
-#         ax.set_axisbelow(True)
-#
-#         return ax
-#
-# setattr(pandas.DataFrame, 'volcano', volcano)
+# -----------------
+# VOLCANOPLOT CLASS
+#------------------
 
 
 class VolcanoPlot(pandas.plotting._core.PlanePlot):
@@ -498,7 +452,6 @@ class VolcanoPlot(pandas.plotting._core.PlanePlot):
 
         if is_integer(c) and not self.data.columns.holds_integer():
             c = self.data.columns[c]
-
         self.c = c
 
     def _make_plot(self):
@@ -562,21 +515,23 @@ class VolcanoPlot(pandas.plotting._core.PlanePlot):
             ax.errorbar(data[x].values, data[y].values,
                         linestyle='none', **err_kwds)
 
-#Amending the pandas.plotting._core
+# Patch VolcanoPlot pandas.plotting._core
 
 # Set VolcanoPlot as an attribute of pandas.plotting._core
 setattr(pandas.plotting._core, "VolcanoPlot", VolcanoPlot)
 
 # Create the volcano helper function
 def volcano(self, x=None, y=None, s=None, c=None, **kwds):
+
     return self(kind='volcano', x=x, y=y, c=c, s=s, **kwds)
 
 # Set the helper function
 setattr(pandas.plotting._core.FramePlotMethods, "volcano", volcano)
 # Append the class to pandas.plotting._core._klasses
 pandas.plotting._core._klasses.append(pandas.plotting._core.VolcanoPlot)
-
+# Append to dataframe kinds.
+pandas.plotting._core._dataframe_kinds.append("volcano")
+# Append to all kinds.
+pandas.plotting._core._all_kinds.append("volcano")
 # Add the class to the pandas.plotting._core._plot_klass dict
 pandas.plotting._core._plot_klass[VolcanoPlot._kind] = pandas.plotting._core.VolcanoPlot
-pandas.plotting._core._dataframe_kinds.append("volcano")
-pandas.plotting._core._all_kinds.append("volcano")
