@@ -16,6 +16,6 @@ filter_type
 filter_out
 subtract_by_matrix
 
-# TO DO LIST
+### TO DO LIST
 
-# FIXME: Add better documentation .Look into some kind of build the docs method.
+#### FIXME: Add better documentation .Look into some kind of build the docs method.
