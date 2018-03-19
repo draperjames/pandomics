@@ -45,11 +45,6 @@ try:
 except ImportError as err:
     print(err)
 
-# try:
-#     from pandomics import pandas as pd
-# except ImportError as err:
-#     print(err)
-
 
 def first_member(self, delim=';'):
     """Return the first member of split on delim.
@@ -432,6 +427,7 @@ class VolcanoPlot(pandas.plotting._core.PlanePlot):
         if x is None:
             if "FC" in data:
                 x="FC"
+
             elif "LFC" in data:
                 x="LFC"
 
@@ -522,8 +518,84 @@ setattr(pandas.plotting._core, "VolcanoPlot", VolcanoPlot)
 
 # Create the volcano helper function
 def volcano(self, x=None, y=None, s=None, c=None, **kwds):
+    """
+    Create a volcano scatter plot with varying marker point size and color.
 
+    The coordinates of each point are defined by two dataframe columns and
+    filled circles are used to represent each point. This kind of plot is
+    useful to see complex correlations between two variables. Points could
+    be for instance natural 2D coordinates like longitude and latitude in
+    a map or, in general, any pair of metrics that can be plotted against
+    each other.
+
+    Parameters
+    ----------
+    x : int or str
+        The column name or column position to be used as horizontal
+        coordinates for each point. Defaults to FC or LFC if present.
+
+    y : int or str
+        The column name or column position to be used as vertical
+        coordinates for each point. Defaults to negative_log10_pvalue or will
+        take the -np.log10 of the pvalue if it is present.
+
+    s : scalar or array_like, optional
+        The size of each point. Possible values are:
+
+        - A single scalar so all points have the same size.
+
+        - A sequence of scalars, which will be used for each point's size
+          recursively. For instance, when passing [2,14] all points size
+          will be either 2 or 14, alternatively.
+
+    c : str, int or array_like, optional
+        The color of each point. Possible values are:
+
+        - A single color string referred to by name, RGB or RGBA code,
+          for instance 'red' or '#a98d19'.
+
+        - A sequence of color strings referred to by name, RGB or RGBA
+          code, which will be used for each point's color recursively. For
+          intance ['green','yellow'] all points will be filled in green or
+          yellow, alternatively.
+
+        - A column name or position whose values will be used to color the
+          marker points according to a colormap.
+
+    **kwds
+        Keyword arguments to pass on to :meth:`pandas.DataFrame.plot`.
+
+    Returns
+    -------
+    axes : :class:`matplotlib.axes.Axes` or numpy.ndarray of them
+
+    See Also
+    --------
+    matplotlib.pyplot.scatter : scatter plot using multiple input data
+        formats.
+
+    Examples
+    --------
+    Let's see how to draw a scatter plot using coordinates from the values
+    in a DataFrame's columns.
+
+    .. plot::
+        :context: close-figs
+
+        >>> df = pd.DataFrame([[5.1, 3.5, 0], [4.9, 3.0, 0]],
+        ...                   columns=['FC', 'negative_log10_pvalue'])
+        ...
+        >>> ax1 = df.plot.volcano()
+
+    And now with the color determined by a column as well.
+
+    .. plot::
+        :context: close-figs
+
+        >>> ax2 = df.plot.volcano(colormap='viridis')
+    """
     return self(kind='volcano', x=x, y=y, c=c, s=s, **kwds)
+
 
 # Set the helper function
 setattr(pandas.plotting._core.FramePlotMethods, "volcano", volcano)
