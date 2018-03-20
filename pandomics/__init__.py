@@ -43,6 +43,7 @@ FIXME: ADD COPY
 
 import os
 from .utils import pandas
+from .visualization_tools import bokeh_nb
 
 
 def find_path():
