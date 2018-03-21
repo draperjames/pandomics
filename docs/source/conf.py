@@ -32,15 +32,12 @@ import os
 top_dir = os.path.dirname(os.path.realpath(__file__))
 top_dir = os.path.split(top_dir)[0]
 top_dir = os.path.split(top_dir)[0]
-# print(top_dir)
-
 version_path = os.path.join(top_dir, project, "__version__")
 
 with open(version_path, "r") as f:
     __version__ = f.read().split("\n")[0]
-
-#print(__version__)
-
+# Set the version and release number.
+version = __version__
 release = __version__
 
 
