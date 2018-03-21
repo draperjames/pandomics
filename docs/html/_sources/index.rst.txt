@@ -1,11 +1,9 @@
 .. pandomics documentation master file, created by
    sphinx-quickstart on Wed Mar 21 09:00:53 2018.
 
-pandomics documentation
-=======================
+pandomics's documentation
+=========================
  Welcome! This website is under construction. We are trying our best to provide in depth documentation of omin but if there is something that we've left out please file an issue on the projects github and let us know. `Report on issue on github. <https://github.com/draperjames/pandomics/issues>`_
-
-Review the source code or create your own fork from the `pandomics github <https://github.com/draperjames/pandomics>`_
 
  System Requirements
  -------------------

@@ -1,0 +1,2 @@
+.. automodule:: pandomics.utils
+  :members:

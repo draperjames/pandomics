@@ -26,22 +26,7 @@ author = 'James Draper'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-
-import os
-# Find the project path.
-top_dir = os.path.dirname(os.path.realpath(__file__))
-top_dir = os.path.split(top_dir)[0]
-top_dir = os.path.split(top_dir)[0]
-# print(top_dir)
-
-version_path = os.path.join(top_dir, project, "__version__")
-
-with open(version_path, "r") as f:
-    __version__ = f.read().split("\n")[0]
-
-#print(__version__)
-
-release = __version__
+release = 'v0.0.9'
 
 
 # -- General configuration ---------------------------------------------------
