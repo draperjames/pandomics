@@ -1,9 +1,10 @@
-move docs html
+start /b move docs html
 
 cd html
+dir
 
-make.bat html
+::start /b make.bat html
 
-cd ..
+::cd ..
 
-move html docs
+::start /b move html docs
