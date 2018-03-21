@@ -1,0 +1,689 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pandomics.utils &#8212; pandomics v0.0.9 documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pandomics v0.0.9 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pandomics.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Custom pandas tools.</span>
+
+<span class="sd">Hotpatched functions for pandas.DataFrame</span>
+<span class="sd">-------------------------------------</span>
+<span class="sd">Hotpatching aka monkey-patching functions to an existing class is suggested</span>
+<span class="sd">over subclassing functions. I prefer to use this method instead of pandas</span>
+<span class="sd">pandas.DataFrame.pipe command because I think that it yields a simpler syntax for</span>
+<span class="sd">for the lab rats.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># LICENSE</span>
+<span class="c1"># -------</span>
+
+<span class="c1"># Copyright 2018 James Draper</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy</span>
+<span class="c1"># of this software and associated documentation files, (the software)), to deal</span>
+<span class="c1"># in the Software without restriction, including without limitation the rights</span>
+<span class="c1"># to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
+<span class="c1"># copies of the Software, and to permit persons to whom the Software is</span>
+<span class="c1"># furnished to do so, subject to the following conditions: The above copyright</span>
+<span class="c1"># notice and this permission notice shall be included in all copies or</span>
+<span class="c1"># substantial portions of the Software. THE SOFTWARE IS PROVIDED &quot;AS IS&quot;,</span>
+<span class="c1"># WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED</span>
+<span class="c1"># TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND</span>
+<span class="c1"># NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE</span>
+<span class="c1"># FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,</span>
+<span class="c1"># TORT OR OTHERWISE, ARISING FROM. OUT OF OR IN CONNECTION WITH THE SOFTWARE OR</span>
+<span class="c1"># THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
+<span class="kn">from</span> <span class="nn">pandas.core.dtypes.common</span> <span class="k">import</span> <span class="n">is_integer</span><span class="p">,</span> <span class="n">is_hashable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">ttest_ind</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">statsmodels.sandbox.stats.multicomp</span> <span class="k">import</span> <span class="n">multipletests</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="first_member"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.first_member">[docs]</a><span class="k">def</span> <span class="nf">first_member</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delim</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the first member of split on delim.</span>
+
+<span class="sd">    Intended for pandas.Series that has lists in the form of strings</span>
+<span class="sd">    with a foreign delimiter.</span>
+
+<span class="sd">    WARNING: NaNs are cast as strings and cast back to floats. So if</span>
+<span class="sd">    your first member happens to be &#39;nan&#39; it will be cast as a float.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    delim : str</span>
+<span class="sd">        The delimeter to to perform the split on.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    results : pandas.Series</span>
+<span class="sd">        A Series of the first members of the list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delim</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">))</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="s1">&#39;first_member&#39;</span><span class="p">,</span> <span class="n">first_member</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="log2"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.log2">[docs]</a><span class="k">def</span> <span class="nf">log2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take the Log2 of all values in a DataFrame.&quot;&quot;&quot;</span></div>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">)</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;log2&quot;</span><span class="p">,</span> <span class="n">log2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="log2_normalize"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.log2_normalize">[docs]</a><span class="k">def</span> <span class="nf">log2_normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prepend_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">append_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a Log2 normalized DataFrame Log2(values)-mean(Log2(values)).&quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log2</span><span class="p">()</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log2</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">prepend_cols</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">prepend_cols</span> <span class="o">+</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span>
+
+    <span class="k">if</span> <span class="n">append_cols</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">+</span> <span class="n">append_cols</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;log2_normalize&quot;</span><span class="p">,</span> <span class="n">log2_normalize</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compare_to"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.compare_to">[docs]</a><span class="k">def</span> <span class="nf">compare_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subtract all columns of a DataFrame by specified column.&quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;compare_to&quot;</span><span class="p">,</span> <span class="n">compare_to</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="normalization_factors"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.normalization_factors">[docs]</a><span class="k">def</span> <span class="nf">normalization_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute normalization factors for a DataFrame.&quot;&quot;&quot;</span>
+    <span class="n">norm_factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">norm_factors</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;normalization_factors&quot;</span><span class="p">,</span> <span class="n">normalization_factors</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="normalize_to"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.normalize_to">[docs]</a><span class="k">def</span> <span class="nf">normalize_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalize a DataFrame to another DataFrame.&quot;&quot;&quot;</span>
+    <span class="c1"># Sort by columns.</span>
+    <span class="n">self_sort</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">self_sort</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">self_sort</span><span class="p">]</span>
+    <span class="c1"># Sort the normal dataframe by it&#39;s columns.</span>
+    <span class="n">normal_sort</span> <span class="o">=</span> <span class="n">normal</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">normal_sort</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">normal</span> <span class="o">=</span> <span class="n">normal</span><span class="p">[</span><span class="n">normal_sort</span><span class="p">]</span>
+    <span class="c1"># Divide by the normalization factors.</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="bp">self</span> <span class="o">/</span> <span class="n">normal</span><span class="o">.</span><span class="n">normalization_factors</span><span class="p">()</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+    <span class="n">normalized</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span> <span class="o">+</span> <span class="s2">&quot;: Normalized to: &quot;</span> <span class="o">+</span> <span class="n">normal</span><span class="o">.</span><span class="n">columns</span></div>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;normalize_to&quot;</span><span class="p">,</span> <span class="n">normalize_to</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="fold_change"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.fold_change">[docs]</a><span class="k">def</span> <span class="nf">fold_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">numerator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">denominator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_out_numerator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">filter_out_denominator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">column_name</span><span class="o">=</span><span class="s2">&quot;FC&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Return the fold change of two groups in this DataFrame or this DataFrame and another(right).</span>
+
+<span class="sd">    When making comparisons between this DataFrame and another, set the `right`</span>
+<span class="sd">    kwarg to the other DataFrame, do not use the numerator and denominator</span>
+<span class="sd">    kwargs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    numerator: str</span>
+
+<span class="sd">    denominator: str</span>
+
+<span class="sd">    right: pandas.DataFrame</span>
+
+<span class="sd">    column_name: str</span>
+
+<span class="sd">    axis: int</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result: pandas.DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">right</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numerator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_out_numerator</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_out</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">numerator</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">numerator</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">denominator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_out_denominator</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_out</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">denominator</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">denominator</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="o">-</span> <span class="n">right</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;fold_change&quot;</span><span class="p">,</span> <span class="n">fold_change</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ttest"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.ttest">[docs]</a><span class="k">def</span> <span class="nf">ttest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">numerator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">denominator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_out_numerator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+          <span class="n">filter_out_denominator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">column_name</span><span class="o">=</span><span class="s2">&quot;pvalue&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Return the p-value of two groups in this DataFrame or this DataFrame and another(right).</span>
+
+<span class="sd">    The numerator and denominator must be defined to make a comparison inside of</span>
+<span class="sd">    a DataFrame.</span>
+
+<span class="sd">    When making comparisons between this DataFrame and another, set the `right`</span>
+<span class="sd">    kwarg to the other DataFrame, do not use the numerator and denominator</span>
+<span class="sd">    kwargs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    numerator: str</span>
+
+<span class="sd">    denominator: str</span>
+
+<span class="sd">    right: pandas.DataFrame</span>
+
+<span class="sd">    column_name: str</span>
+
+<span class="sd">    axis: int</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result: pandas.DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">right</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numerator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_out_numerator</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_out</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">numerator</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">numerator</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">denominator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_out_denominator</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_out</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">denominator</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="n">denominator</span><span class="p">)</span>
+
+    <span class="c1"># The loop below suppresses an irrelevent error message.</span>
+    <span class="c1"># For more details on this see:</span>
+    <span class="c1"># http://stackoverflow.com/questions/40452765/invalid-value-in-less-when-comparing-np-nan-in-an-array</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">less</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># ttest_ind implemented</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ttest_ind</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span><span class="o">.</span><span class="n">pvalue</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;ttest&quot;</span><span class="p">,</span> <span class="n">ttest</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ttest_fdr"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.ttest_fdr">[docs]</a><span class="k">def</span> <span class="nf">ttest_fdr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">denominator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_out_numerator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+              <span class="n">filter_out_denominator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">column_name</span><span class="o">=</span><span class="s2">&quot;pvalue&quot;</span><span class="p">,</span>
+              <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the p-value and p-adjusted of this dataframe and another or two groups inside of this dataframe.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span> <span class="ow">or</span> <span class="o">.</span><span class="mi">05</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ttest</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="p">,</span>
+                        <span class="n">numerator</span><span class="o">=</span><span class="n">numerator</span><span class="p">,</span>
+                        <span class="n">denominator</span><span class="o">=</span><span class="n">denominator</span><span class="p">,</span>
+                        <span class="n">filter_out_numerator</span><span class="o">=</span><span class="n">filter_out_numerator</span><span class="p">,</span>
+                        <span class="n">filter_out_denominator</span><span class="o">=</span><span class="n">filter_out_denominator</span><span class="p">,</span>
+                        <span class="n">column_name</span><span class="o">=</span><span class="n">column_name</span><span class="p">,</span>
+                        <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="n">fdr_funct</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">multipletests</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="n">p_adj</span> <span class="o">=</span> <span class="n">fdr_funct</span><span class="p">(</span><span class="n">pvals</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">p_adj</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">p_adj</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">p_adj</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="n">p_adj</span> <span class="o">=</span> <span class="n">p_adj</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">p_adj</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;p_adjusted&quot;</span><span class="p">]</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">result</span><span class="p">,</span> <span class="n">p_adj</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;ttest_fdr&quot;</span><span class="p">,</span> <span class="n">ttest_fdr</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="fold_change_with_ttest"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.fold_change_with_ttest">[docs]</a><span class="k">def</span> <span class="nf">fold_change_with_ttest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">denominator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">filter_out_numerator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">filter_out_denominator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                           <span class="n">fdr_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fdr_method</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the fold change, p-values, and p-adjusted for a comparison.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fold_change</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fold_change</span><span class="p">(</span><span class="n">numerator</span><span class="o">=</span><span class="n">numerator</span><span class="p">,</span>
+                                   <span class="n">denominator</span><span class="o">=</span><span class="n">denominator</span><span class="p">,</span>
+                                   <span class="n">filter_out_numerator</span><span class="o">=</span><span class="n">filter_out_numerator</span><span class="p">,</span>
+                                   <span class="n">filter_out_denominator</span><span class="o">=</span><span class="n">filter_out_denominator</span><span class="p">,</span>
+                                   <span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="p">,</span>
+                                   <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="n">pvalue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ttest_fdr</span><span class="p">(</span><span class="n">numerator</span><span class="o">=</span><span class="n">numerator</span><span class="p">,</span>
+                            <span class="n">denominator</span><span class="o">=</span><span class="n">denominator</span><span class="p">,</span>
+                            <span class="n">filter_out_numerator</span><span class="o">=</span><span class="n">filter_out_numerator</span><span class="p">,</span>
+                            <span class="n">filter_out_denominator</span><span class="o">=</span><span class="n">filter_out_denominator</span><span class="p">,</span>
+                            <span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="p">,</span>
+                            <span class="n">alpha</span><span class="o">=</span><span class="n">fdr_alpha</span><span class="p">,</span>
+                            <span class="n">method</span><span class="o">=</span><span class="n">fdr_method</span><span class="p">,</span>
+                            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">fold_change</span><span class="p">,</span> <span class="n">pvalue</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;fold_change_with_ttest&quot;</span><span class="p">,</span> <span class="n">fold_change_with_ttest</span><span class="p">)</span>
+
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">label_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a dict with column labels as keys and positions as values.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">i</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s1">&#39;label_pos&#39;</span><span class="p">,</span> <span class="n">label_pos</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="label_insert"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.label_insert">[docs]</a><span class="k">def</span> <span class="nf">label_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;Right&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Insert an array-like into a DataFrame before that label.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        The label of th ecolumn to insert by.</span>
+<span class="sd">    how : str</span>
+<span class="sd">        Right or Left.</span>
+<span class="sd">    value : Series</span>
+<span class="sd">        New column.</span>
+<span class="sd">    column : str</span>
+<span class="sd">        New column name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;Right&#39;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_pos</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;Left&#39;</span><span class="p">:</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_pos</span><span class="p">[</span><span class="n">label</span><span class="p">]),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s1">&#39;label_insert&#39;</span><span class="p">,</span> <span class="n">label_insert</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="filter_type"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.filter_type">[docs]</a><span class="k">def</span> <span class="nf">filter_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">desired</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filter a DataFrame by the type stored in a given column.&quot;&quot;&quot;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">desired</span><span class="p">)]</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s1">&#39;filter_type&#39;</span><span class="p">,</span> <span class="n">filter_type</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="filter_out"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.filter_out">[docs]</a><span class="k">def</span> <span class="nf">filter_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filter like filter but the opposite.&quot;&quot;&quot;</span>
+
+    <span class="n">filter_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">filter_result</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">result</span><span class="p">]</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s1">&#39;filter_out&#39;</span><span class="p">,</span> <span class="n">filter_out</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="filter_rows"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.filter_rows">[docs]</a><span class="k">def</span> <span class="nf">filter_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">term</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return DataFrame that contains a given term(str) on specific column.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filtered</span> <span class="o">=</span> <span class="bp">self</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="n">on</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">term</span><span class="p">)]</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;filter_rows failed:&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">filtered</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s1">&#39;filter_rows&#39;</span><span class="p">,</span> <span class="n">filter_rows</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="subtract_by_matrix"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.subtract_by_matrix">[docs]</a><span class="k">def</span> <span class="nf">subtract_by_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prepend_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">append_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns DataFrame that has been subtracted by another DataFrame using the as_matrix method.</span>
+
+<span class="sd">    This method can be invoked instead of the pandas.DataFrame.subtract method.</span>
+<span class="sd">    Which does not subtract matrices in the usual way.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span> <span class="o">-</span> <span class="n">other_dataframe</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">if</span> <span class="n">prepend_cols</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">prepend_cols</span> <span class="o">+</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">if</span> <span class="n">append_cols</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="o">+</span> <span class="n">append_cols</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not subtract by matrix.&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s1">&#39;subtract_by_matrix&#39;</span><span class="p">,</span> <span class="n">subtract_by_matrix</span><span class="p">)</span>
+
+<span class="c1">#-----------------------------------------------------------------------------</span>
+<span class="c1"># VOLCANOPLOT CLASS</span>
+<span class="c1">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="VolcanoPlot"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.VolcanoPlot">[docs]</a><span class="k">class</span> <span class="nc">VolcanoPlot</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">PlanePlot</span><span class="p">):</span>
+    <span class="n">_kind</span> <span class="o">=</span> <span class="s1">&#39;volcano&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;FC&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">=</span><span class="s2">&quot;FC&quot;</span>
+
+            <span class="k">elif</span> <span class="s2">&quot;LFC&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">=</span><span class="s2">&quot;LFC&quot;</span>
+
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;negative_log10_pvalue&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">y</span><span class="o">=</span><span class="s2">&quot;negative_log10_pvalue&quot;</span>
+
+            <span class="k">elif</span> <span class="s2">&quot;pvalue&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s2">&quot;negative_log10_pvalue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;pvalue&quot;</span><span class="p">])</span>
+                <span class="n">y</span><span class="o">=</span><span class="s2">&quot;negative_log10_pvalue&quot;</span>
+
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># hide the matplotlib default for size, in case we want to change</span>
+            <span class="c1"># the handling of this argument later</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="mi">20</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">VolcanoPlot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_integer</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">holds_integer</span><span class="p">():</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
+
+    <span class="k">def</span> <span class="nf">_make_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">c_is_column</span> <span class="o">=</span> <span class="n">is_hashable</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="c1"># plot a colorbar only if a colormap is provided or necessary</span>
+        <span class="n">cb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;colorbar&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">colormap</span> <span class="ow">or</span> <span class="n">c_is_column</span><span class="p">)</span>
+
+        <span class="c1"># pandas uses colormap, matplotlib uses cmap.</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colormap</span> <span class="ow">or</span> <span class="s1">&#39;Greys&#39;</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Specify exactly one of `c` and `color`&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">c</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">c_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;patch.facecolor&#39;</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">c_values</span> <span class="o">=</span> <span class="n">color</span>
+
+        <span class="k">elif</span> <span class="n">c_is_column</span><span class="p">:</span>
+            <span class="n">c_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c_values</span> <span class="o">=</span> <span class="n">c</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Scatter plot called</span>
+        <span class="n">scatter</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c_values</span><span class="p">,</span>
+                             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwds</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cb</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">collections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">kws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpl_ge_1_3_1</span><span class="p">():</span>
+                <span class="n">kws</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span> <span class="k">if</span> <span class="n">c_is_column</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_legend_handle</span><span class="p">(</span><span class="n">scatter</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">legend</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">errors_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_errorbars</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">errors_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_errorbars</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xerr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors_x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors_y</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">err_kwds</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">errors_x</span><span class="p">,</span> <span class="o">**</span><span class="n">errors_y</span><span class="p">)</span>
+            <span class="n">err_kwds</span><span class="p">[</span><span class="s1">&#39;ecolor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scatter</span><span class="o">.</span><span class="n">get_facecolor</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span></div>
+                        <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">err_kwds</span><span class="p">)</span>
+
+<span class="c1"># Patch VolcanoPlot pandas.plotting._core</span>
+
+<span class="c1"># Set VolcanoPlot as an attribute of pandas.plotting._core</span>
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="p">,</span> <span class="s2">&quot;VolcanoPlot&quot;</span><span class="p">,</span> <span class="n">VolcanoPlot</span><span class="p">)</span>
+
+<span class="c1"># Create the volcano helper function</span>
+<div class="viewcode-block" id="volcano"><a class="viewcode-back" href="../../api/utils.html#pandomics.utils.volcano">[docs]</a><span class="k">def</span> <span class="nf">volcano</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a volcano scatter plot with varying marker point size and color.</span>
+
+<span class="sd">    The coordinates of each point are defined by two dataframe columns and</span>
+<span class="sd">    filled circles are used to represent each point. This kind of plot is</span>
+<span class="sd">    useful to see complex correlations between two variables. Points could</span>
+<span class="sd">    be for instance natural 2D coordinates like longitude and latitude in</span>
+<span class="sd">    a map or, in general, any pair of metrics that can be plotted against</span>
+<span class="sd">    each other.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : int or str</span>
+<span class="sd">        The column name or column position to be used as horizontal</span>
+<span class="sd">        coordinates for each point. Defaults to FC or LFC if present.</span>
+
+<span class="sd">    y : int or str</span>
+<span class="sd">        The column name or column position to be used as vertical</span>
+<span class="sd">        coordinates for each point. Defaults to negative_log10_pvalue or will</span>
+<span class="sd">        take the -np.log10 of the pvalue if it is present.</span>
+
+<span class="sd">    s : scalar or array_like, optional</span>
+<span class="sd">        The size of each point. Possible values are:</span>
+
+<span class="sd">        - A single scalar so all points have the same size.</span>
+
+<span class="sd">        - A sequence of scalars, which will be used for each point&#39;s size</span>
+<span class="sd">          recursively. For instance, when passing [2,14] all points size</span>
+<span class="sd">          will be either 2 or 14, alternatively.</span>
+
+<span class="sd">    c : str, int or array_like, optional</span>
+<span class="sd">        The color of each point. Possible values are:</span>
+
+<span class="sd">        - A single color string referred to by name, RGB or RGBA code,</span>
+<span class="sd">          for instance &#39;red&#39; or &#39;#a98d19&#39;.</span>
+
+<span class="sd">        - A sequence of color strings referred to by name, RGB or RGBA</span>
+<span class="sd">          code, which will be used for each point&#39;s color recursively. For</span>
+<span class="sd">          intance [&#39;green&#39;,&#39;yellow&#39;] all points will be filled in green or</span>
+<span class="sd">          yellow, alternatively.</span>
+
+<span class="sd">        - A column name or position whose values will be used to color the</span>
+<span class="sd">          marker points according to a colormap.</span>
+
+<span class="sd">    **kwds</span>
+<span class="sd">        Keyword arguments to pass on to :meth:`pandas.DataFrame.plot`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    axes : :class:`matplotlib.axes.Axes` or numpy.ndarray of them</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    matplotlib.pyplot.scatter : scatter plot using multiple input data</span>
+<span class="sd">        formats.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Let&#39;s see how to draw a scatter plot using coordinates from the values</span>
+<span class="sd">    in a DataFrame&#39;s columns.</span>
+
+<span class="sd">    .. plot::</span>
+<span class="sd">        :context: close-figs</span>
+
+<span class="sd">        &gt;&gt;&gt; df = pd.DataFrame([[5.1, 3.5, 0], [4.9, 3.0, 0]],</span>
+<span class="sd">        ...                   columns=[&#39;FC&#39;, &#39;negative_log10_pvalue&#39;])</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; ax1 = df.plot.volcano()</span>
+
+<span class="sd">    And now with the color determined by a column as well.</span>
+
+<span class="sd">    .. plot::</span>
+<span class="sd">        :context: close-figs</span>
+
+<span class="sd">        &gt;&gt;&gt; ax2 = df.plot.volcano(colormap=&#39;viridis&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+    <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;volcano&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+
+
+<span class="c1"># Set the helper function</span>
+<span class="nb">setattr</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">FramePlotMethods</span><span class="p">,</span> <span class="s2">&quot;volcano&quot;</span><span class="p">,</span> <span class="n">volcano</span><span class="p">)</span>
+<span class="c1"># Append the class to pandas.plotting._core._klasses</span>
+<span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">_klasses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">VolcanoPlot</span><span class="p">)</span>
+<span class="c1"># Append to dataframe kinds.</span>
+<span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">_dataframe_kinds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;volcano&quot;</span><span class="p">)</span>
+<span class="c1"># Append to all kinds.</span>
+<span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">_all_kinds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;volcano&quot;</span><span class="p">)</span>
+<span class="c1"># Add the class to the pandas.plotting._core._plot_klass dict</span>
+<span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">_plot_klass</span><span class="p">[</span><span class="n">VolcanoPlot</span><span class="o">.</span><span class="n">_kind</span><span class="p">]</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">plotting</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">VolcanoPlot</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pandomics v0.0.9 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, James Draper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+  </body>
+</html>

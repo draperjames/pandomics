@@ -1,0 +1,301 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Hotpatched functions for pandas.DataFrame &#8212; pandomics v0.0.9 documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="pandomics’s documentation" href="../index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="pandomics’s documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">pandomics v0.0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-pandomics.utils"></span><p>Custom pandas tools.</p>
+<div class="section" id="hotpatched-functions-for-pandas-dataframe">
+<h1>Hotpatched functions for pandas.DataFrame<a class="headerlink" href="#hotpatched-functions-for-pandas-dataframe" title="Permalink to this headline">¶</a></h1>
+<p>Hotpatching aka monkey-patching functions to an existing class is suggested
+over subclassing functions. I prefer to use this method instead of pandas
+pandas.DataFrame.pipe command because I think that it yields a simpler syntax for
+for the lab rats.</p>
+<dl class="class">
+<dt id="pandomics.utils.VolcanoPlot">
+<em class="property">class </em><code class="descclassname">pandomics.utils.</code><code class="descname">VolcanoPlot</code><span class="sig-paren">(</span><em>data</em>, <em>x=None</em>, <em>y=None</em>, <em>s=None</em>, <em>c=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#VolcanoPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.VolcanoPlot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.compare_to">
+<code class="descclassname">pandomics.utils.</code><code class="descname">compare_to</code><span class="sig-paren">(</span><em>self</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#compare_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.compare_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtract all columns of a DataFrame by specified column.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.filter_out">
+<code class="descclassname">pandomics.utils.</code><code class="descname">filter_out</code><span class="sig-paren">(</span><em>self</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#filter_out"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.filter_out" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter like filter but the opposite.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.filter_rows">
+<code class="descclassname">pandomics.utils.</code><code class="descname">filter_rows</code><span class="sig-paren">(</span><em>self</em>, <em>on=None</em>, <em>term=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#filter_rows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.filter_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return DataFrame that contains a given term(str) on specific column.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.filter_type">
+<code class="descclassname">pandomics.utils.</code><code class="descname">filter_type</code><span class="sig-paren">(</span><em>self</em>, <em>col</em>, <em>desired</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#filter_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.filter_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter a DataFrame by the type stored in a given column.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.first_member">
+<code class="descclassname">pandomics.utils.</code><code class="descname">first_member</code><span class="sig-paren">(</span><em>self</em>, <em>delim=';'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#first_member"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.first_member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the first member of split on delim.</p>
+<p>Intended for pandas.Series that has lists in the form of strings
+with a foreign delimiter.</p>
+<p>WARNING: NaNs are cast as strings and cast back to floats. So if
+your first member happens to be ‘nan’ it will be cast as a float.</p>
+<dl class="docutils">
+<dt>delim <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>The delimeter to to perform the split on.</dd>
+</dl>
+<dl class="docutils">
+<dt>results <span class="classifier-delimiter">:</span> <span class="classifier">pandas.Series</span></dt>
+<dd>A Series of the first members of the list.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.fold_change">
+<code class="descclassname">pandomics.utils.</code><code class="descname">fold_change</code><span class="sig-paren">(</span><em>self</em>, <em>right=None</em>, <em>numerator=None</em>, <em>denominator=None</em>, <em>filter_out_numerator=False</em>, <em>filter_out_denominator=False</em>, <em>column_name='FC'</em>, <em>axis=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#fold_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.fold_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the fold change of two groups in this DataFrame or this DataFrame and another(right).</p>
+<p>When making comparisons between this DataFrame and another, set the <cite>right</cite>
+kwarg to the other DataFrame, do not use the numerator and denominator
+kwargs.</p>
+<p>numerator: str</p>
+<p>denominator: str</p>
+<p>right: pandas.DataFrame</p>
+<p>column_name: str</p>
+<p>axis: int</p>
+<p>result: pandas.DataFrame</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.fold_change_with_ttest">
+<code class="descclassname">pandomics.utils.</code><code class="descname">fold_change_with_ttest</code><span class="sig-paren">(</span><em>self</em>, <em>numerator=None</em>, <em>denominator=None</em>, <em>right=None</em>, <em>filter_out_numerator=False</em>, <em>filter_out_denominator=False</em>, <em>fdr_alpha=None</em>, <em>fdr_method='fdr_bh'</em>, <em>axis=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#fold_change_with_ttest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.fold_change_with_ttest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the fold change, p-values, and p-adjusted for a comparison.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.label_insert">
+<code class="descclassname">pandomics.utils.</code><code class="descname">label_insert</code><span class="sig-paren">(</span><em>self</em>, <em>label</em>, <em>how='Right'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#label_insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.label_insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert an array-like into a DataFrame before that label.</p>
+<dl class="docutils">
+<dt>label <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>The label of th ecolumn to insert by.</dd>
+<dt>how <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Right or Left.</dd>
+<dt>value <span class="classifier-delimiter">:</span> <span class="classifier">Series</span></dt>
+<dd>New column.</dd>
+<dt>column <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>New column name.</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pandomics.utils.label_pos">
+<code class="descclassname">pandomics.utils.</code><code class="descname">label_pos</code><a class="headerlink" href="#pandomics.utils.label_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dict with column labels as keys and positions as values.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.log2">
+<code class="descclassname">pandomics.utils.</code><code class="descname">log2</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#log2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.log2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take the Log2 of all values in a DataFrame.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.log2_normalize">
+<code class="descclassname">pandomics.utils.</code><code class="descname">log2_normalize</code><span class="sig-paren">(</span><em>self</em>, <em>prepend_cols=None</em>, <em>append_cols=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#log2_normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.log2_normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Log2 normalized DataFrame Log2(values)-mean(Log2(values)).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.normalization_factors">
+<code class="descclassname">pandomics.utils.</code><code class="descname">normalization_factors</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#normalization_factors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.normalization_factors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute normalization factors for a DataFrame.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.normalize_to">
+<code class="descclassname">pandomics.utils.</code><code class="descname">normalize_to</code><span class="sig-paren">(</span><em>self</em>, <em>normal</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#normalize_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.normalize_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize a DataFrame to another DataFrame.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.subtract_by_matrix">
+<code class="descclassname">pandomics.utils.</code><code class="descname">subtract_by_matrix</code><span class="sig-paren">(</span><em>self</em>, <em>other_dataframe=None</em>, <em>prepend_cols=None</em>, <em>append_cols=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#subtract_by_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.subtract_by_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns DataFrame that has been subtracted by another DataFrame using the as_matrix method.</p>
+<p>This method can be invoked instead of the pandas.DataFrame.subtract method.
+Which does not subtract matrices in the usual way.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.ttest">
+<code class="descclassname">pandomics.utils.</code><code class="descname">ttest</code><span class="sig-paren">(</span><em>self</em>, <em>right=None</em>, <em>numerator=None</em>, <em>denominator=None</em>, <em>filter_out_numerator=False</em>, <em>filter_out_denominator=False</em>, <em>column_name='pvalue'</em>, <em>axis=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#ttest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.ttest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the p-value of two groups in this DataFrame or this DataFrame and another(right).</p>
+<p>The numerator and denominator must be defined to make a comparison inside of
+a DataFrame.</p>
+<p>When making comparisons between this DataFrame and another, set the <cite>right</cite>
+kwarg to the other DataFrame, do not use the numerator and denominator
+kwargs.</p>
+<p>numerator: str</p>
+<p>denominator: str</p>
+<p>right: pandas.DataFrame</p>
+<p>column_name: str</p>
+<p>axis: int</p>
+<p>result: pandas.DataFrame</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.ttest_fdr">
+<code class="descclassname">pandomics.utils.</code><code class="descname">ttest_fdr</code><span class="sig-paren">(</span><em>self</em>, <em>numerator=None</em>, <em>denominator=None</em>, <em>filter_out_numerator=False</em>, <em>filter_out_denominator=False</em>, <em>right=None</em>, <em>column_name='pvalue'</em>, <em>alpha=None</em>, <em>method='fdr_bh'</em>, <em>axis=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#ttest_fdr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.ttest_fdr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the p-value and p-adjusted of this dataframe and another or two groups inside of this dataframe.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pandomics.utils.volcano">
+<code class="descclassname">pandomics.utils.</code><code class="descname">volcano</code><span class="sig-paren">(</span><em>self</em>, <em>x=None</em>, <em>y=None</em>, <em>s=None</em>, <em>c=None</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pandomics/utils.html#volcano"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pandomics.utils.volcano" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a volcano scatter plot with varying marker point size and color.</p>
+<p>The coordinates of each point are defined by two dataframe columns and
+filled circles are used to represent each point. This kind of plot is
+useful to see complex correlations between two variables. Points could
+be for instance natural 2D coordinates like longitude and latitude in
+a map or, in general, any pair of metrics that can be plotted against
+each other.</p>
+<dl class="docutils">
+<dt>x <span class="classifier-delimiter">:</span> <span class="classifier">int or str</span></dt>
+<dd>The column name or column position to be used as horizontal
+coordinates for each point. Defaults to FC or LFC if present.</dd>
+<dt>y <span class="classifier-delimiter">:</span> <span class="classifier">int or str</span></dt>
+<dd>The column name or column position to be used as vertical
+coordinates for each point. Defaults to negative_log10_pvalue or will
+take the -np.log10 of the pvalue if it is present.</dd>
+<dt>s <span class="classifier-delimiter">:</span> <span class="classifier">scalar or array_like, optional</span></dt>
+<dd><p class="first">The size of each point. Possible values are:</p>
+<ul class="last simple">
+<li>A single scalar so all points have the same size.</li>
+<li>A sequence of scalars, which will be used for each point’s size
+recursively. For instance, when passing [2,14] all points size
+will be either 2 or 14, alternatively.</li>
+</ul>
+</dd>
+<dt>c <span class="classifier-delimiter">:</span> <span class="classifier">str, int or array_like, optional</span></dt>
+<dd><p class="first">The color of each point. Possible values are:</p>
+<ul class="last simple">
+<li>A single color string referred to by name, RGB or RGBA code,
+for instance ‘red’ or ‘#a98d19’.</li>
+<li>A sequence of color strings referred to by name, RGB or RGBA
+code, which will be used for each point’s color recursively. For
+intance [‘green’,’yellow’] all points will be filled in green or
+yellow, alternatively.</li>
+<li>A column name or position whose values will be used to color the
+marker points according to a colormap.</li>
+</ul>
+</dd>
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>kwds</dt>
+<dd>Keyword arguments to pass on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">pandas.DataFrame.plot()</span></code>.</dd>
+</dl>
+<p>axes : <code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.axes.Axes</span></code> or numpy.ndarray of them</p>
+<dl class="docutils">
+<dt>matplotlib.pyplot.scatter <span class="classifier-delimiter">:</span> <span class="classifier">scatter plot using multiple input data</span></dt>
+<dd>formats.</dd>
+</dl>
+<p>Let’s see how to draw a scatter plot using coordinates from the values
+in a DataFrame’s columns.</p>
+<p>And now with the color determined by a column as well.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../index.html"
+                        title="previous chapter">pandomics’s documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="pandomics’s documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">pandomics v0.0.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, James Draper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+  </body>
+</html>
