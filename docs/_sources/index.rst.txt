@@ -27,7 +27,7 @@ Getting Started
  .. toctree::
     :maxdepth: 4
 
-    intro/description
+    description
 
 """""""""""""
 pandomics API

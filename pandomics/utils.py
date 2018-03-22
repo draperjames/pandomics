@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Custom pandas tools.
+"""
+pandomics.utils
+===============
 
 Hotpatched functions for pandas.DataFrame
--------------------------------------
+
+
 Hotpatching aka monkey-patching functions to an existing class is suggested
 over subclassing functions. I prefer to use this method instead of pandas
 pandas.DataFrame.pipe command because I think that it yields a simpler syntax for

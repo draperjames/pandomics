@@ -15,15 +15,18 @@ def native_cmd(cmd, whitespace=False):
     NOTE: Results may contain white space charaters at end of lines.
     """
     result = subprocess.check_output(cmd, shell=True).decode()
-    if whitespace:
-        return result
-    else:
-        # Remove carrige returns.
-        result = re.sub('\r|\n', '', result, re.X)
-        return result
+
+    result = subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+    return result
 
 
 def main():
+    """Forces sphinx docs to conform to GitHub pages conventions.
+
+    Inspired by this blog entry:
+    https://jefflirion.github.io/sphinx-github-pages.html
+    """
     if os.path.exists("docs"):
         try:
             shutil.move("docs", "html")
