@@ -34,6 +34,7 @@ for the lab rats.
 
 import functools
 import pandas
+from pandas.core.indexes.base import Index
 from pandas.core.dtypes.common import is_integer, is_hashable
 import numpy as np
 
@@ -140,6 +141,31 @@ def normalize_to(self, normal):
 setattr(pandas.DataFrame, "normalize_to", normalize_to)
 
 
+def _comparator(self, item=None, filter_out_item=False):
+    """Returns filtered DataFrame.abs
+    """
+
+    if type(item) is str:
+        if filter_out_item:
+            result = self.filter_out(regex=item)
+        else:
+            result = self.filter(regex=item)
+
+    elif type(item) == Index:
+
+        if filter_out_item:
+            # FIXME: This not right.
+            result = self[item]
+
+        else:
+            result = self[item]
+
+    return result
+
+
+setattr(pandas.DataFrame, "_comparator", _comparator)
+
+
 def fold_change(self, right=None, numerator=None, denominator=None, filter_out_numerator=False,
                 filter_out_denominator=False, column_name="FC", axis=1):
 
@@ -171,16 +197,10 @@ def fold_change(self, right=None, numerator=None, denominator=None, filter_out_n
 
     else:
         if numerator is not None:
-            if filter_out_numerator:
-                left = self.filter_out(regex=numerator)
-            else:
-                left = self.filter(regex=numerator)
+            left = _comparator(self, item=numerator, filter_out_item=filter_out_numerator)
 
         if denominator is not None:
-            if filter_out_denominator:
-                right = self.filter_out(regex=denominator)
-            else:
-                right = self.filter(regex=denominator)
+            right = _comparator(self, item=denominator, filter_out_item=filter_out_denominator)
 
     result = left.mean(axis=axis) - right.mean(axis=axis)
     result = pandas.DataFrame(result, index=self.index, columns=[column_name])
@@ -225,16 +245,10 @@ def ttest(self, right=None, numerator=None, denominator=None, filter_out_numerat
 
     else:
         if numerator is not None:
-            if filter_out_numerator:
-                left = self.filter_out(regex=numerator)
-            else:
-                left = self.filter(regex=numerator)
+            left = _comparator(self, item=numerator, filter_out_item=filter_out_numerator)
 
         if denominator is not None:
-            if filter_out_denominator:
-                right = self.filter_out(regex=denominator)
-            else:
-                right = self.filter(regex=denominator)
+            right = _comparator(self, item=denominator, filter_out_item=filter_out_denominator)
 
     # The loop below suppresses an irrelevent error message.
     # For more details on this see:
