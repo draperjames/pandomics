@@ -142,7 +142,7 @@ setattr(pandas.DataFrame, "normalize_to", normalize_to)
 
 
 def _comparator(self, item=None, filter_out_item=False):
-    """Returns filtered DataFrame.abs
+    """Returns filtered DataFrame.
     """
 
     if type(item) is str:
