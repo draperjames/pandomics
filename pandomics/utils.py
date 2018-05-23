@@ -132,7 +132,7 @@ def normalize_to(self, normal):
     normal_sort.sort()
     normal = normal[normal_sort]
     # Divide by the normalization factors.
-    normalized = self / normal.normalization_factors().as_matrix()
+    normalized = self / normal.normalization_factors().values
     normalized.columns = self.columns + ": Normalized to: " + normal.columns
     return normalized
 
@@ -397,7 +397,7 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
     result = pandas.DataFrame()
 
     try:
-        result = self.as_matrix() - other_dataframe.as_matrix()
+        result = self.values - other_dataframe.values
         result = pandas.DataFrame(result)
         result.index = self.index
         result.columns = self.columns
