@@ -416,7 +416,7 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
 
 setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
 
-def symmetrical_x_lim(ax):
+def _symmetrical_x_lim(ax):
         xmin, xmax = ax.get_xlim()
         
         if abs(xmin) > abs(xmax):
