@@ -133,7 +133,7 @@ def normalize_to(self, normal):
     normal_sort.sort()
     normal = normal[normal_sort]
     # Divide by the normalization factors.
-    normalized = self / normal.normalization_factors().as_matrix()
+    normalized = self / normal.normalization_factors().values
     normalized.columns = self.columns + ": Normalized to: " + normal.columns
     return normalized
 
@@ -411,7 +411,7 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
     result = pandas.DataFrame()
 
     try:
-        result = self.as_matrix() - other_dataframe.as_matrix()
+        result = self.values - other_dataframe.values
         result = pandas.DataFrame(result)
         result.index = self.index
         result.columns = self.columns
@@ -429,6 +429,15 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
 
 
 setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
+
+def _symmetrical_x_lim(ax):
+        xmin, xmax = ax.get_xlim()
+        
+        if abs(xmin) > abs(xmax):
+            ax.set_xlim(xmin, abs(xmin))
+        elif abs(xmin) < abs(xmax):
+            ax.set_xlim(-xmax, xmax)    
+        return ax
 
 #-----------------------------------------------------------------------------
 # VOLCANOPLOT CLASS
@@ -465,7 +474,7 @@ class VolcanoPlot(pandas.plotting._core.PlanePlot):
         if is_integer(c) and not self.data.columns.holds_integer():
             c = self.data.columns[c]
         self.c = c
-
+    
     def _make_plot(self):
         x, y, c, data = self.x, self.y, self.c, self.data
         ax = self.axes[0]
@@ -504,7 +513,10 @@ class VolcanoPlot(pandas.plotting._core.PlanePlot):
         # Scatter plot called
         scatter = ax.scatter(data[x].values, data[y].values, c=c_values,
                              label=label, cmap=cmap, **self.kwds)
-
+        
+        if symmetrical_x_lim != False:
+            symmetrical_x_lim(ax)
+        
         if cb:
             img = ax.collections[0]
             kws = dict(ax=ax)
