@@ -302,7 +302,8 @@ setattr(pandas.DataFrame, "ttest_fdr", ttest_fdr)
 
 def fold_change_with_ttest(self, numerator=None, denominator=None, right=None,
                            filter_out_numerator=False, filter_out_denominator=False,
-                           fdr_alpha=None, fdr_method="fdr_bh", axis=1):
+                           fdr_alpha=None, fdr_method="fdr_bh", metadata=None, axis=1):
+
     """Return the fold change, p-values, and p-adjusted for a comparison.
     """
 
@@ -323,7 +324,14 @@ def fold_change_with_ttest(self, numerator=None, denominator=None, right=None,
                             axis=axis)
 
     result = pandas.concat([fold_change, pvalue], axis=axis)
-    return result
+
+    if metadata is None:
+        return result
+
+    else:
+        metadata_truncated = metadata.loc[result.index]
+        result = pandas.concat([metadata_truncated, result], axis=axis)
+        return result
 
 
 setattr(pandas.DataFrame, "fold_change_with_ttest", fold_change_with_ttest)
