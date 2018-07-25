@@ -336,10 +336,9 @@ def fold_change_with_ttest(self, numerator=None, denominator=None, right=None,
     # If missing_values is True then NaNs will be presnet in result.
     if missing_values is True:
         pass
-
     # If missing_values is False rows will be droped if they any NaNs present.
     else:
-        result = result.dropna(subset=["FC", "pvalue"], inplace=True)
+        result.dropna(subset=["FC", "pvalue"], inplace=True)
 
     return result
 
