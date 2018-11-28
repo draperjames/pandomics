@@ -33,6 +33,7 @@ for the lab rats.
 # THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import functools
+import itertools
 import pandas
 from pandas.core.indexes.base import Index
 from pandas.core.dtypes.common import is_integer, is_hashable
@@ -446,6 +447,33 @@ def subtract_by_matrix(self, other_dataframe=None, prepend_cols=None, append_col
 
 
 setattr(pandas.DataFrame, 'subtract_by_matrix', subtract_by_matrix)
+
+
+def set_super_columns(dataframes, super_column_labels):
+    """Returns MultiIndexed DataFrame from a given list of DataFrames and labels.
+
+    """
+
+    if len(dataframes) == len(super_column_labels):
+        # Create list of lists in this format: [[label, dataframe],...]
+        zipped = list(zip(super_column_labels, dataframes))
+
+        # Generate each multiindex.
+        mult_index_columns = list(itertools.starmap(lambda x,y: pandas.MultiIndex.from_product([[x], y]), zipped))
+
+        # Set the each copied dataframe to it's corresponding index
+        result = []
+        for x,y in list(zip(dataframes, mult_index_columns)):
+            mdataframe = x.copy()
+            mdataframe.columns = y
+            result.append(mdataframe)
+
+        result = pandas.concat(result, axis=1)
+
+    return result
+
+setattr(pandas, 'set_super_columns', set_super_columns)
+
 
 def _symmetrical_x_lim(ax):
         xmin, xmax = ax.get_xlim()
