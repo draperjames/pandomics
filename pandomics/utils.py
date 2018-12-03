@@ -470,10 +470,24 @@ def set_super_columns(dataframes, super_column_labels):
 
         result = pandas.concat(result, axis=1)
 
+    else:
+        print("len(dataframes) and len(super_column_labels) does not match.")
+        return None
+
     return result
+
 
 setattr(pandas, 'set_super_columns', set_super_columns)
 
+
+def drop_super_columns(self):
+    """Removes the toplayer of column labels.
+    """
+    self.columns = self.columns.droplevel(0)
+    return
+
+
+setattr(pandas.Dataframe, 'drop_super_columns', drop_super_columns)
 
 def _symmetrical_x_lim(ax):
         xmin, xmax = ax.get_xlim()
