@@ -487,7 +487,7 @@ def drop_super_columns(self):
     return
 
 
-setattr(pandas.Dataframe, 'drop_super_columns', drop_super_columns)
+setattr(pandas.DataFrame, 'drop_super_columns', drop_super_columns)
 
 def _symmetrical_x_lim(ax):
         xmin, xmax = ax.get_xlim()
