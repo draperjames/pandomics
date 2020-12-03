@@ -168,7 +168,7 @@ setattr(pandas.DataFrame, "_comparator", _comparator)
 
 
 def fold_change(self, right=None, numerator=None, denominator=None, filter_out_numerator=False,
-                filter_out_denominator=False, column_name="FC", axis=1):
+                filter_out_denominator=False, column_name="Log2FC", axis=1):
 
     """Return the fold change of two groups in this DataFrame or this DataFrame and another(right).
 
@@ -339,7 +339,7 @@ def fold_change_with_ttest(self, numerator=None, denominator=None, right=None,
         pass
     # If missing_values is False rows will be droped if they any NaNs present.
     else:
-        result.dropna(subset=["FC", "pvalue"], inplace=True)
+        result.dropna(subset=["Log2FC", "pvalue"], inplace=True)
 
     return result
 
@@ -501,196 +501,196 @@ def _symmetrical_x_lim(ax):
 #-----------------------------------------------------------------------------
 # VOLCANOPLOT CLASS
 #-----------------------------------------------------------------------------
-
-
-class VolcanoPlot(pandas.plotting._core.PlanePlot):
-    _kind = 'volcano'
-
-    def __init__(self, data, x=None, y=None, s=None, c=None, **kwargs):
-
-        if x is None:
-            if "FC" in data:
-                x="FC"
-
-            elif "LFC" in data:
-                x="LFC"
-
-        if y is None:
-            if "negative_log10_pvalue" in data:
-                y="negative_log10_pvalue"
-
-            elif "pvalue" in data:
-                data["negative_log10_pvalue"] = -np.log10(data["pvalue"])
-                y="negative_log10_pvalue"
-
-        if s is None:
-            # hide the matplotlib default for size, in case we want to change
-            # the handling of this argument later
-            s = 20
-
-        super(VolcanoPlot, self).__init__(data, x, y, s=s, **kwargs)
-
-        if is_integer(c) and not self.data.columns.holds_integer():
-            c = self.data.columns[c]
-        self.c = c
-
-    def _make_plot(self):
-        x, y, c, data = self.x, self.y, self.c, self.data
-        ax = self.axes[0]
-
-        c_is_column = is_hashable(c) and c in self.data.columns
-
-        # plot a colorbar only if a colormap is provided or necessary
-        cb = self.kwds.pop('colorbar', self.colormap or c_is_column)
-
-        # pandas uses colormap, matplotlib uses cmap.
-        cmap = self.colormap or 'Greys'
-        cmap = self.plt.cm.get_cmap(cmap)
-        color = self.kwds.pop("color", None)
-
-        if c is not None and color is not None:
-            raise TypeError('Specify exactly one of `c` and `color`')
-
-        elif c is None and color is None:
-            c_values = self.plt.rcParams['patch.facecolor']
-
-        elif color is not None:
-            c_values = color
-
-        elif c_is_column:
-            c_values = self.data[c].values
-
-        else:
-            c_values = c
-
-        if self.legend and hasattr(self, 'label'):
-            label = self.label
-
-        else:
-            label = None
-
-        # Scatter plot called
-        scatter = ax.scatter(data[x].values, data[y].values, c=c_values,
-                             label=label, cmap=cmap, **self.kwds)
-
-        if _symmetrical_x_lim != False:
-            _symmetrical_x_lim(ax)
-
-        if cb:
-            img = ax.collections[0]
-            kws = dict(ax=ax)
-            if self.mpl_ge_1_3_1():
-                kws['label'] = c if c_is_column else ''
-            self.fig.colorbar(img, **kws)
-
-        if label is not None:
-            self._add_legend_handle(scatter, label)
-
-        else:
-            self.legend = False
-
-        errors_x = self._get_errorbars(label=x, index=0, yerr=False)
-        errors_y = self._get_errorbars(label=y, index=0, xerr=False)
-
-        if len(errors_x) > 0 or len(errors_y) > 0:
-            err_kwds = dict(errors_x, **errors_y)
-            err_kwds['ecolor'] = scatter.get_facecolor()[0]
-            ax.errorbar(data[x].values, data[y].values,
-                        linestyle='none', **err_kwds)
-
-# Patch VolcanoPlot pandas.plotting._core
-
-# Set VolcanoPlot as an attribute of pandas.plotting._core
-setattr(pandas.plotting._core, "VolcanoPlot", VolcanoPlot)
-
-# Create the volcano helper function
-def volcano(self, x=None, y=None, s=None, c=None, **kwds):
-    """
-    Create a volcano scatter plot with varying marker point size and color.
-
-    The coordinates of each point are defined by two dataframe columns and
-    filled circles are used to represent each point. This kind of plot is
-    useful to see complex correlations between two variables. Points could
-    be for instance natural 2D coordinates like longitude and latitude in
-    a map or, in general, any pair of metrics that can be plotted against
-    each other.
-
-    Parameters
-    ----------
-    x : int or str
-        The column name or column position to be used as horizontal
-        coordinates for each point. Defaults to FC or LFC if present.
-
-    y : int or str
-        The column name or column position to be used as vertical
-        coordinates for each point. Defaults to negative_log10_pvalue or will
-        take the -np.log10 of the pvalue if it is present.
-
-    s : scalar or array_like, optional
-        The size of each point. Possible values are:
-
-        - A single scalar so all points have the same size.
-
-        - A sequence of scalars, which will be used for each point's size
-          recursively. For instance, when passing [2,14] all points size
-          will be either 2 or 14, alternatively.
-
-    c : str, int or array_like, optional
-        The color of each point. Possible values are:
-
-        - A single color string referred to by name, RGB or RGBA code,
-          for instance 'red' or '#a98d19'.
-
-        - A sequence of color strings referred to by name, RGB or RGBA
-          code, which will be used for each point's color recursively. For
-          intance ['green','yellow'] all points will be filled in green or
-          yellow, alternatively.
-
-        - A column name or position whose values will be used to color the
-          marker points according to a colormap.
-
-    **kwds
-        Keyword arguments to pass on to :meth:`pandas.DataFrame.plot`.
-
-    Returns
-    -------
-    axes : :class:`matplotlib.axes.Axes` or numpy.ndarray of them
-
-    See Also
-    --------
-    matplotlib.pyplot.scatter : scatter plot using multiple input data
-        formats.
-
-    Examples
-    --------
-    Let's see how to draw a scatter plot using coordinates from the values
-    in a DataFrame's columns.
-
-    .. plot::
-        :context: close-figs
-
-        >>> df = pd.DataFrame([[5.1, 3.5, 0], [4.9, 3.0, 0]],
-        ...                   columns=['FC', 'negative_log10_pvalue'])
-        ...
-        >>> ax1 = df.plot.volcano()
-
-    And now with the color determined by a column as well.
-
-    .. plot::
-        :context: close-figs
-
-        >>> ax2 = df.plot.volcano(colormap='viridis')
-    """
-    return self(kind='volcano', x=x, y=y, c=c, s=s, **kwds)
-
-
-# Set the helper function
-setattr(pandas.plotting._core.FramePlotMethods, "volcano", volcano)
-# Append the class to pandas.plotting._core._klasses
-pandas.plotting._core._klasses.append(pandas.plotting._core.VolcanoPlot)
-# Append to dataframe kinds.
-pandas.plotting._core._dataframe_kinds.append("volcano")
-# Append to all kinds.
-pandas.plotting._core._all_kinds.append("volcano")
-# Add the class to the pandas.plotting._core._plot_klass dict
-pandas.plotting._core._plot_klass[VolcanoPlot._kind] = pandas.plotting._core.VolcanoPlot
+#
+#
+# class VolcanoPlot(pandas.plotting._core.PlanePlot):
+#     _kind = 'volcano'
+#
+#     def __init__(self, data, x=None, y=None, s=None, c=None, **kwargs):
+#
+#         if x is None:
+#             if "FC" in data:
+#                 x="FC"
+#
+#             elif "LFC" in data:
+#                 x="LFC"
+#
+#         if y is None:
+#             if "negative_log10_pvalue" in data:
+#                 y="negative_log10_pvalue"
+#
+#             elif "pvalue" in data:
+#                 data["negative_log10_pvalue"] = -np.log10(data["pvalue"])
+#                 y="negative_log10_pvalue"
+#
+#         if s is None:
+#             # hide the matplotlib default for size, in case we want to change
+#             # the handling of this argument later
+#             s = 20
+#
+#         super(VolcanoPlot, self).__init__(data, x, y, s=s, **kwargs)
+#
+#         if is_integer(c) and not self.data.columns.holds_integer():
+#             c = self.data.columns[c]
+#         self.c = c
+#
+#     def _make_plot(self):
+#         x, y, c, data = self.x, self.y, self.c, self.data
+#         ax = self.axes[0]
+#
+#         c_is_column = is_hashable(c) and c in self.data.columns
+#
+#         # plot a colorbar only if a colormap is provided or necessary
+#         cb = self.kwds.pop('colorbar', self.colormap or c_is_column)
+#
+#         # pandas uses colormap, matplotlib uses cmap.
+#         cmap = self.colormap or 'Greys'
+#         cmap = self.plt.cm.get_cmap(cmap)
+#         color = self.kwds.pop("color", None)
+#
+#         if c is not None and color is not None:
+#             raise TypeError('Specify exactly one of `c` and `color`')
+#
+#         elif c is None and color is None:
+#             c_values = self.plt.rcParams['patch.facecolor']
+#
+#         elif color is not None:
+#             c_values = color
+#
+#         elif c_is_column:
+#             c_values = self.data[c].values
+#
+#         else:
+#             c_values = c
+#
+#         if self.legend and hasattr(self, 'label'):
+#             label = self.label
+#
+#         else:
+#             label = None
+#
+#         # Scatter plot called
+#         scatter = ax.scatter(data[x].values, data[y].values, c=c_values,
+#                              label=label, cmap=cmap, **self.kwds)
+#
+#         if _symmetrical_x_lim != False:
+#             _symmetrical_x_lim(ax)
+#
+#         if cb:
+#             img = ax.collections[0]
+#             kws = dict(ax=ax)
+#             if self.mpl_ge_1_3_1():
+#                 kws['label'] = c if c_is_column else ''
+#             self.fig.colorbar(img, **kws)
+#
+#         if label is not None:
+#             self._add_legend_handle(scatter, label)
+#
+#         else:
+#             self.legend = False
+#
+#         errors_x = self._get_errorbars(label=x, index=0, yerr=False)
+#         errors_y = self._get_errorbars(label=y, index=0, xerr=False)
+#
+#         if len(errors_x) > 0 or len(errors_y) > 0:
+#             err_kwds = dict(errors_x, **errors_y)
+#             err_kwds['ecolor'] = scatter.get_facecolor()[0]
+#             ax.errorbar(data[x].values, data[y].values,
+#                         linestyle='none', **err_kwds)
+#
+# # Patch VolcanoPlot pandas.plotting._core
+#
+# # Set VolcanoPlot as an attribute of pandas.plotting._core
+# setattr(pandas.plotting._core, "VolcanoPlot", VolcanoPlot)
+#
+# # Create the volcano helper function
+# def volcano(self, x=None, y=None, s=None, c=None, **kwds):
+#     """
+#     Create a volcano scatter plot with varying marker point size and color.
+#
+#     The coordinates of each point are defined by two dataframe columns and
+#     filled circles are used to represent each point. This kind of plot is
+#     useful to see complex correlations between two variables. Points could
+#     be for instance natural 2D coordinates like longitude and latitude in
+#     a map or, in general, any pair of metrics that can be plotted against
+#     each other.
+#
+#     Parameters
+#     ----------
+#     x : int or str
+#         The column name or column position to be used as horizontal
+#         coordinates for each point. Defaults to FC or LFC if present.
+#
+#     y : int or str
+#         The column name or column position to be used as vertical
+#         coordinates for each point. Defaults to negative_log10_pvalue or will
+#         take the -np.log10 of the pvalue if it is present.
+#
+#     s : scalar or array_like, optional
+#         The size of each point. Possible values are:
+#
+#         - A single scalar so all points have the same size.
+#
+#         - A sequence of scalars, which will be used for each point's size
+#           recursively. For instance, when passing [2,14] all points size
+#           will be either 2 or 14, alternatively.
+#
+#     c : str, int or array_like, optional
+#         The color of each point. Possible values are:
+#
+#         - A single color string referred to by name, RGB or RGBA code,
+#           for instance 'red' or '#a98d19'.
+#
+#         - A sequence of color strings referred to by name, RGB or RGBA
+#           code, which will be used for each point's color recursively. For
+#           intance ['green','yellow'] all points will be filled in green or
+#           yellow, alternatively.
+#
+#         - A column name or position whose values will be used to color the
+#           marker points according to a colormap.
+#
+#     **kwds
+#         Keyword arguments to pass on to :meth:`pandas.DataFrame.plot`.
+#
+#     Returns
+#     -------
+#     axes : :class:`matplotlib.axes.Axes` or numpy.ndarray of them
+#
+#     See Also
+#     --------
+#     matplotlib.pyplot.scatter : scatter plot using multiple input data
+#         formats.
+#
+#     Examples
+#     --------
+#     Let's see how to draw a scatter plot using coordinates from the values
+#     in a DataFrame's columns.
+#
+#     .. plot::
+#         :context: close-figs
+#
+#         >>> df = pd.DataFrame([[5.1, 3.5, 0], [4.9, 3.0, 0]],
+#         ...                   columns=['FC', 'negative_log10_pvalue'])
+#         ...
+#         >>> ax1 = df.plot.volcano()
+#
+#     And now with the color determined by a column as well.
+#
+#     .. plot::
+#         :context: close-figs
+#
+#         >>> ax2 = df.plot.volcano(colormap='viridis')
+#     """
+#     return self(kind='volcano', x=x, y=y, c=c, s=s, **kwds)
+#
+#
+# # Set the helper function
+# setattr(pandas.plotting._core.FramePlotMethods, "volcano", volcano)
+# # Append the class to pandas.plotting._core._klasses
+# pandas.plotting._core._klasses.append(pandas.plotting._core.VolcanoPlot)
+# # Append to dataframe kinds.
+# pandas.plotting._core._dataframe_kinds.append("volcano")
+# # Append to all kinds.
+# pandas.plotting._core._all_kinds.append("volcano")
+# # Add the class to the pandas.plotting._core._plot_klass dict
+# pandas.plotting._core._plot_klass[VolcanoPlot._kind] = pandas.plotting._core.VolcanoPlot
